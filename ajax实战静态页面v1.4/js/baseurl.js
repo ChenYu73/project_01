@@ -1,0 +1,1 @@
+let baseurl='http://www.shop.com/'

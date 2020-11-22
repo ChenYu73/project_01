@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<title></title>
+	<meta content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0" name="viewport" />
+	<meta content="yes" name="apple-mobile-web-app-capable" />
+	<meta content="black" name="apple-mobile-web-app-status-bar-style" />
+	<meta content="telephone=no" name="format-detection" />
+	<link rel="stylesheet" href="./lib/iconfont/iconfont.css">
+	<link rel="stylesheet" href="./lib/vant/index.css">
+	<link href="css/goodsList.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+	<section class="aui-flexView">
+		<section class="aui-scrollView" id="addList">
+			<div class="aui-shop-change">
+				<div class="aui-search-box">
+					<i class="icon icon-search"></i>
+					<input type="text" placeholder="搜索商品">
+				</div>
+			</div>
+			<div class="aui-list-theme-box">
+				<a href="javascript:;" class="aui-list-item">
+					<div class="aui-list-theme-img">
+						<img src="img/pd-013.png" alt="">
+					</div>
+					
+				</a>
+			</div>
+			<div class="aui-pagination" id="addFooter">
+				<div class="aui-pagination-prev disabled">
+					<i class="van-icon van-icon-arrow-left"></i>
+				</div>
+				<div class="aui-pagination-page">
+					1/5,共30件商品
+				</div>
+				<div class="aui-pagination-next">
+					<i class="van-icon van-icon-arrow"></i>
+				</div>
+			</div>
+		</section>
+	</section>
+	<div class="van-hairline--top-bottom van-tabbar van-tabbar--fixed">
+		<div class="van-tabbar-item van-tabbar-item--active">
+			<div class="van-tabbar-item__icon">
+				<i class="van-icon van-icon-wap-home-o"></i>
+			</div>
+			<div class="van-tabbar-item__text">商品</div>
+		</div>
+		<div class="van-tabbar-item">
+			<div class="van-tabbar-item__icon">
+				<i class="van-icon van-icon-shopping-cart-o"></i>
+			</div>
+			<div class="van-tabbar-item__text">购物车</div>
+		</div>
+	</div>
+	<!--  定义模板引擎 -->
+	<script type="text/html" id="tpl">
+		<div class="aui-shop-change">
+			<form id="btn_Search">
+				<div class="aui-search-box">
+					<i class="icon icon-search"></i>
+					<input type="text" placeholder="搜索商品" name="search" id="ipt" >
+				</div>
+			</form>
+		</div>
+		<div class="aui-list-theme-box" id="addList">
+		{{each data}}		
+		<a href="javascript:;" class="aui-list-item" id="logionbtn">
+			<div class="aui-list-theme-img">
+				<img src="{{$value.fileurl | imgUrl}}" alt="">
+			</div>
+			<div class="aui-list-theme-message">
+				<h3 class="aui-list-theme-title">{{$value.name}}</h3>
+				<h3 class="aui-list-theme-subtitle">{{$value.content}}</h3>
+				<div class="aui-flex">
+					<div class="aui-flex-box">
+						<h2><em>￥</em>{{$value.price}} <i>￥899</i></h2>
+					</div>
+					<div class="aui-coupon"><span class="iconfont icon-gouwuche"></span></div>
+				</div>
+			</div>
+		</a>
+		{{/each}}
+	</div>
+	<div class="aui-pagination" id="addFooter">
+		<div class="aui-pagination-prev disabled" id="disable" >
+			<i class="van-icon van-icon-arrow-left"></i>
+		</div>
+		<div class="aui-pagination-page">
+			{{page.pageNo}}/{{page.pageCount}},共{{page.total}}件商品
+		</div>
+		<div class="aui-pagination-next" id="btnFye">
+			<i class="van-icon van-icon-arrow"></i>
+		</div>
+	</div>
+	 </script>
+</body>
+<script src="./lib/jquery.min.js"></script>
+<script src="./lib/template-web.js"></script>
+<script>
+	var pageNum = 1;
+	let myUrl = 'http://www.shop.com/api/goods/getlist';
+	$(function () {
+		// 1. 图片过滤器
+		template.defaults.imports.imgUrl = function (v) {
+			return 'http://www.shop.com' + v
+		}
+		// 1.  获取数据 渲染页面
+		getShopList(pageNum, '');
+	})
+	// 1.  渲染页面 -----------------------------------------
+	function getShopList(num, searchStr) {
+		$.ajax({
+			method: 'GET',
+			url: myUrl + '?' + searchStr,
+			data: {
+				page: num,
+			},
+			success: function (ele) {
+				Ele = ele;
+				console.log(ele);
+				if (ele.code == 2000) {
+					let strHtml = template('tpl', ele)
+					$('#addList').html(strHtml)
+					// 2. 点击分页 渲染页面
+					$('#btnFye').on('click', lastBtn);
+					$('#disable').on('click', downBtn);
+					// 3. 搜索框 数据  渲染页面
+					$('#ipt').on('blur', searchData);
+					$('#addList').on('click', '#logionbtn',logionbtn)
+				} else {
+					return alert('获取列表失败~')
+				}
+			}
+		})
+	}
+	function lastBtn() {
+		if (pageNum == Ele.page.pageCount) {
+			return alert('已经是最后一页咯~~~')
+		}
+		pageNum++;
+		getShopList(pageNum, '')
+	}
+	function downBtn() {
+		if (pageNum == 1) {
+			return alert('已经是第一页咯~~~')
+		}
+		pageNum--;
+		getShopList(pageNum, '')
+	}
+
+	function searchData() {
+		let strIptVal = $('#btn_Search').serialize();
+		console.log(strIptVal);
+		getShopList('',strIptVal)
+	}
+	function logionbtn () {
+		
+		window.location.href = 'goodsInfo.html'
+	}
+</script>
+</html>

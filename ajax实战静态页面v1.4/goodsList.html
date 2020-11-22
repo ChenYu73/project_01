@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<title></title>
+	<meta content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0" name="viewport" />
+	<meta content="yes" name="apple-mobile-web-app-capable" />
+	<meta content="black" name="apple-mobile-web-app-status-bar-style" />
+	<meta content="telephone=no" name="format-detection" />
+	<link rel="stylesheet" href="./lib/iconfont/iconfont.css">
+	<link rel="stylesheet" href="./lib/vant/index.css">
+	<script src="js/baseurl.js"></script>
+	<link href="css/goodsList.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+	<section class="aui-flexView">
+		<section class="aui-scrollView">
+			<div class="aui-shop-change">
+				<div class="aui-search-box">
+					<i class="icon icon-search"></i>
+					<input type="text" placeholder="搜索商品" id="search">
+				</div>
+			</div>
+			<div class="aui-list-theme-box">
+			<script type="text/html" id="goods">
+				{{each data}}
+				<a href="javascript:;" data-id="{{$value.id}}" class="aui-list-item">
+					<div class="aui-list-theme-img">
+						<img src="{{$value.fileurl | img}}" alt="">
+					</div>
+					<div class="aui-list-theme-message">
+						<h3 class="aui-list-theme-title">{{$value.name}}</h3>
+						<h3 class="aui-list-theme-subtitle">{{$value.content}}</h3>
+						<div class="aui-flex">
+							<div class="aui-flex-box" >
+								<h2><em>￥</em>{{$value.price}} <i>￥899</i></h2>
+							</div>
+							<div class="aui-coupon">
+								<span class="iconfont icon-gouwuche" data-id="{{$value.id}}" data-price="{{$value.price}}"></span>
+							</div>
+						</div>
+					</div>
+				</a>
+				{{/each}}
+			</script>
+			</div>
+			
+			<div class="aui-pagination">
+				<div class="aui-pagination-prev disabled">
+					<i class="van-icon van-icon-arrow-left"></i>
+				</div>
+				<div class="aui-pagination-page">
+					1/5,共30件商品
+				</div>
+				<div class="aui-pagination-next">
+					<i class="van-icon van-icon-arrow"></i>
+				</div>
+			</div>
+		</section>
+	</section>
+	<div class="van-hairline--top-bottom van-tabbar van-tabbar--fixed">
+		<div class="van-tabbar-item van-tabbar-item--active">
+			<div class="van-tabbar-item__icon">
+				<i class="van-icon van-icon-wap-home-o"></i>
+			</div>
+			<div class="van-tabbar-item__text">商品</div>
+		</div>
+		<div class="van-tabbar-item" id='gocar'>
+			<div class="van-tabbar-item__icon">
+				<i class="van-icon van-icon-shopping-cart-o"></i>
+			</div>
+			<div class="van-tabbar-item__text">购物车</div>
+		</div>
+	</div>
+</body>
+<script src="./lib/jquery.min.js"></script>
+<script src="./lib/template-web.js"></script>
+<script>
+	$(() => {
+		template.defaults.imports.img = function (src) {
+			return baseurl + src
+		}
+
+
+		load(page, '');
+		$('.van-icon-arrow').on('click', next);
+		$('.van-icon-arrow-left').on('click', prev);
+		$('#gocar').on('click',move);
+		$('#search').on('keyup', function(e) {			
+			let kw = $(this).val().trim();
+			if (e.keyCode === 13) {
+				page = 1;
+				load(page, kw);
+			}
+		});
+		//跳转详情页
+		$('.aui-list-theme-box').on('click','.aui-list-item',function(){
+			let id=$(this).attr('data-id');
+			location.href='goodsInfo.html?id='+id
+		})
+
+		//添加购物车
+		$('.aui-list-theme-box').on('click','.icon-gouwuche',function(e){
+			let price=$(this).attr('data-price');
+			let id=$(this).attr('data-id');
+			let mytoken=localStorage.getItem('mytoken');
+			console.log(price);
+			console.log(id);
+			console.log(mytoken);
+			e.stopPropagation();
+			$.ajax({
+				method:'GET',
+				url:`${baseurl}api/cart/add?gid=${id}&price=${price}&token=${mytoken}`,
+				success(res){
+					alert(res.msg)
+				}
+			})
+		})
+	})
+
+
+	let page = 1;
+	let pagemax = '';
+
+
+	function load(p, s) {
+		$.ajax({
+			method: 'GET',
+			url: `${baseurl}api/goods/getlist?page=${p}&search=${s}`,
+			success(res) {
+				pagemax = res.page.pageCount;
+				let str = template('goods', res);
+				$('.aui-list-theme-box').html(str);
+				$('.aui-pagination-page').html(`${res.page.pageNo}/${pagemax},总共${res.page.total}件商品`);
+			}
+		})
+	}
+	function move(){
+		location.href='cart.html';
+	}
+
+	function next() {
+		if (page === pagemax) return;
+		page++;
+		load(page, '');
+	}
+	function prev() {
+		if (page === 1) return;
+		page--;
+		load(page, '');
+	}
+</script>
+
+</html>

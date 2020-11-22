@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<title></title>
+	<meta content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0" name="viewport" />
+	<meta content="yes" name="apple-mobile-web-app-capable" />
+	<meta content="black" name="apple-mobile-web-app-status-bar-style" />
+	<meta content="telephone=no" name="format-detection" />
+	<link rel="stylesheet" href="./lib/iconfont/iconfont.css">
+	<link rel="stylesheet" href="./lib/vant/index.css">
+	<link href="css/goodsList.css" rel="stylesheet" type="text/css" />
+	<style>
+		body {
+			height: 1500px;
+		}
+	</style>
+</head>
+
+<body>
+	<section class="aui-flexView">
+		<section class="aui-scrollView">
+			<div class="aui-shop-change">
+				<div class="aui-search-box">
+					<i class="icon icon-search"></i>
+					<input type="text" placeholder="搜索商品" id="searchGoodsIpt">
+				</div>
+			</div>
+			<div class="aui-list-theme-box"></div>
+			<div class="aui-pagination">
+				<div class="aui-pagination-prev disabled">
+					<i class="van-icon van-icon-arrow-left"></i>
+				</div>
+				<div class="aui-pagination-page" id="pageNum">
+					1/3,共12件商品
+				</div>
+				<div class="aui-pagination-next">
+					<i class="van-icon van-icon-arrow"></i>
+				</div>
+			</div>
+		</section>
+	</section>
+	<div class="van-hairline--top-bottom van-tabbar van-tabbar--fixed">
+		<div class="van-tabbar-item van-tabbar-item--active">
+			<div class="van-tabbar-item__icon">
+				<i class="van-icon van-icon-wap-home-o"></i>
+			</div>
+			<div class="van-tabbar-item__text">商品</div>
+		</div>
+		<div class="van-tabbar-item">
+			<div class="van-tabbar-item__icon">
+				<i class="van-icon van-icon-shopping-cart-o"></i>
+			</div>
+			<div class="van-tabbar-item__text">购物车</div>
+		</div>
+	</div>
+</body>
+<script src="./lib/jquery.min.js"></script>
+<script src="./lib/template-web.js"></script>
+<script type="text/html" id="tplList">
+	{{each data}}
+	<a href="goodsInfo.html?id={{$value.id}}" class="aui-list-item">
+		<div class="aui-list-theme-img">
+			<img src= "{{$value.fileurl}}" alt="">
+		</div>
+		<div class="aui-list-theme-message">
+			<h3 class="aui-list-theme-title">{{$value.name}}</h3>
+			<h3 class="aui-list-theme-subtitle">{{$value.content}}</h3>
+			<div class="aui-flex">
+				<div class="aui-flex-box">
+					<h2><em>￥</em>{{$value.price}} <i>￥{{$value.oldPrice}}</i></h2>
+				</div>
+				<div class="aui-coupon"><span class="iconfont icon-gouwuche"></span></div>
+			</div>
+		</div>
+	</a>
+	{{/each}}
+</script>
+
+<script>
+	$(function () {
+		getGoodsList()
+		pageNext()
+	})
+	function getGoodsList(currentPage, searchGoods) {
+		$.ajax({
+			method: 'get',
+			url: 'http://www.shop.com/api/goods/getlist',
+			data: {
+				page: currentPage,
+				search: searchGoods
+			},
+			success: res => {
+				console.log(res);
+				res.data.forEach(item => {
+					item.fileurl = 'http://www.shop.com' + item.fileurl
+					item.oldPrice = parseInt(item.price) + 200
+				});
+				let strTplData = template('tplList', res)
+				$('.aui-list-theme-box').html(strTplData)
+				search()
+			}
+		})
+	}
+
+	function pageNext() {
+		let currentPage = 1;
+		let nextBtn = $('.aui-pagination-next')
+		let leftBtn = $('.aui-pagination-prev')
+		nextBtn.on('click', function () {
+			currentPage++;
+			if (currentPage >= 3) {
+				currentPage = 3
+				nextBtn.css('background-color', 'rgba(68,160,179,0.06)')
+				leftBtn.css('background-color', 'rgba(68,160,179,0.5)')
+			} else if (currentPage < 3) {
+				nextBtn.css('background-color', 'rgba(68,160,179,0.5)')
+			}
+			getGoodsList(currentPage)
+			let strPage = `${currentPage}/3,共12件商品`
+			$('#pageNum').html(strPage)
+		})
+		leftBtn.on('click', function () {
+			currentPage--;
+			if (currentPage <= 1) {
+				currentPage = 1
+				leftBtn.css('background-color', 'rgba(68,160,179,0.06)')
+				nextBtn.css('background-color', 'rgba(68,160,179,0.5)')
+			} else if (currentPage > 1) {
+				leftBtn.css('background-color', 'rgba(68,160,179,0.5)')
+			}
+			getGoodsList(currentPage)
+			let strPage = `${currentPage}/3,共12件商品`
+			$('#pageNum').html(strPage)
+		})
+	}
+
+	function search() {
+		$('#searchGoodsIpt').on('keyup', e => {
+			if (e.keyCode == 13) {
+				let searchGoods = $('#searchGoodsIpt').val().trim()
+				getGoodsList('', searchGoods)
+			}
+		})
+	}
+</script>
+
+</html>
